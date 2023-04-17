@@ -1,7 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_complete_guide_shopping_app/widgets/grocery_list.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:flutter_complete_guide_shopping_app/data/categories.dart';
 import 'package:flutter_complete_guide_shopping_app/models/category.dart';
@@ -19,13 +21,19 @@ class _NewItemState extends State<NewItem> {
   String _enteredName = '';
   int _enteredQuantity = 1;
   Category _selectedCategory = categories[Categories.vegetables]!;
-
+  bool isSending = false;
 
   void _saveItem() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      final url = Uri.https('flutter-course-7c872-default-rtdb.firebaseio.com',
-          'shopping-list.json');
+      setState(() {
+        isSending = true;
+      });
+      // final url = Uri.https('flutter-course-7c872-default-rtdb.firebaseio.com',
+      //     'shopping-list.json');
+      final firebaseUri = dotenv.env['FIREBASE_URL'] as String;
+      final firebaseJson = dotenv.env['FIREBASE_JSON'] as String;
+      final url = Uri.https(firebaseUri, firebaseJson);
       final response = await http.post(
         url,
         headers: {'Content-type': 'application/json'},
@@ -38,15 +46,19 @@ class _NewItemState extends State<NewItem> {
         ),
       );
 
-      print(response.body);
-      print(response.statusCode);
-
       // if (!widget.mounted) {
       //   return;
       // }
-      
+
       // ignore: use_build_context_synchronously
-      Navigator.of(context).pop();
+      final responseData = json.decode(response.body);
+      Navigator.of(context).pop(
+        GroceryItem(
+            id: responseData['name'],
+            name: _enteredName,
+            quantity: _enteredQuantity,
+            category: _selectedCategory),
+      );
     }
   }
 
@@ -147,12 +159,18 @@ class _NewItemState extends State<NewItem> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed: _resetForm,
+                    onPressed: isSending ? null : _resetForm,
                     child: Text('Reset'),
                   ),
                   ElevatedButton(
-                    onPressed: _saveItem,
-                    child: Text('Add item'),
+                    onPressed: isSending ? null : _saveItem,
+                    child: isSending
+                        ? SizedBox(
+                            height: 16,
+                            width: 16,
+                            child: CircularProgressIndicator(),
+                          )
+                        : Text('Add item'),
                   )
                 ],
               ),

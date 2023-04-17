@@ -17,6 +17,7 @@ class GroceryList extends StatefulWidget {
 
 class _GroceryListState extends State<GroceryList> {
   List<GroceryItem> _groceryItems = [];
+  var _isLoading = true;
 
   void initState() {
     super.initState();
@@ -29,15 +30,14 @@ class _GroceryListState extends State<GroceryList> {
     final url = Uri.https(firebaseUri, firebaseJson);
     final response = await http.get(url);
 
-
     final Map<String, dynamic> listData = json.decode(response.body);
-    final List<GroceryItem> _loadedItemList = [];
+    final List<GroceryItem> loadedItemList = [];
     for (final item in listData.entries) {
       final category = categories.entries
           .firstWhere(
               (element) => element.value.title == item.value['category'])
           .value;
-      _loadedItemList.add(
+      loadedItemList.add(
         GroceryItem(
             id: item.key,
             name: item.value['name'],
@@ -46,17 +46,25 @@ class _GroceryListState extends State<GroceryList> {
       );
     }
     setState(() {
-      _groceryItems = _loadedItemList;
+      _groceryItems = loadedItemList;
+      _isLoading = false;
     });
   }
 
   void _addItem() async {
-    await Navigator.of(context).push<GroceryItem>(
+    final newItem = await Navigator.of(context).push<GroceryItem>(
       MaterialPageRoute(
         builder: (context) => const NewItem(),
       ),
     );
-    _loadItems();
+    if (newItem == null) {
+      return;
+    }
+
+    setState(() {
+      _groceryItems.add(newItem);
+    });
+    // _loadItems();
   }
 
   void _removeItem(item) {
@@ -66,25 +74,35 @@ class _GroceryListState extends State<GroceryList> {
   }
 
   Widget itemList() {
-    return ListView.builder(
-      itemCount: _groceryItems.length,
-      itemBuilder: (ctx, index) => Dismissible(
-        onDismissed: (direction) {
-          _removeItem(_groceryItems[index]);
-        },
-        key: ValueKey(_groceryItems[index].id),
-        child: ListTile(
-          title: Text(_groceryItems[index].name),
-          leading: Container(
-            width: 24,
-            height: 24,
-            color: _groceryItems[index].category.color,
-          ),
-          trailing: Text(
-            _groceryItems[index].quantity.toString(),
+    if (_isLoading) {
+      return Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+    if (_groceryItems.isNotEmpty) {
+      return ListView.builder(
+        itemCount: _groceryItems.length,
+        itemBuilder: (ctx, index) => Dismissible(
+          onDismissed: (direction) {
+            _removeItem(_groceryItems[index]);
+          },
+          key: ValueKey(_groceryItems[index].id),
+          child: ListTile(
+            title: Text(_groceryItems[index].name),
+            leading: Container(
+              width: 24,
+              height: 24,
+              color: _groceryItems[index].category.color,
+            ),
+            trailing: Text(
+              _groceryItems[index].quantity.toString(),
+            ),
           ),
         ),
-      ),
+      );
+    }
+    return const Center(
+      child: Text('No item added yet, try to add some...'),
     );
   }
 
@@ -95,11 +113,7 @@ class _GroceryListState extends State<GroceryList> {
           title: const Text('Your Groceries'),
           actions: [IconButton(onPressed: _addItem, icon: Icon(Icons.add))],
         ),
-        body: _groceryItems.isEmpty
-            ? const Center(
-                child: Text('No item added yet, try to add some...'),
-              )
-            : itemList() //ListView.builder(
+        body: itemList() //ListView.builder(
         );
   }
 }
