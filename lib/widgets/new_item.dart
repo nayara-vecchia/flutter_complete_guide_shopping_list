@@ -33,32 +33,42 @@ class _NewItemState extends State<NewItem> {
       //     'shopping-list.json');
       final firebaseUri = dotenv.env['FIREBASE_URL'] as String;
       final firebaseJson = dotenv.env['FIREBASE_JSON'] as String;
-      final url = Uri.https(firebaseUri, firebaseJson);
-      final response = await http.post(
-        url,
-        headers: {'Content-type': 'application/json'},
-        body: json.encode(
-          {
-            "name": _enteredName,
-            "quantity": _enteredQuantity,
-            "category": _selectedCategory.title,
-          },
-        ),
-      );
+      final url = Uri.https(firebaseUri, "$firebaseJson.json");
 
-      // if (!widget.mounted) {
-      //   return;
-      // }
+      try {
+        final response = await http.post(
+          url,
+          headers: {'Content-type': 'application/json'},
+          body: json.encode(
+            {
+              "name": _enteredName,
+              "quantity": _enteredQuantity,
+              "category": _selectedCategory.title,
+            },
+          ),
+        );
 
-      // ignore: use_build_context_synchronously
-      final responseData = json.decode(response.body);
-      Navigator.of(context).pop(
-        GroceryItem(
-            id: responseData['name'],
-            name: _enteredName,
-            quantity: _enteredQuantity,
-            category: _selectedCategory),
-      );
+        // if (!widget.mounted) {
+        //   return;
+        // }
+
+        final responseData = json.decode(response.body);
+        // ignore: use_build_context_synchronously
+        Navigator.of(context).pop(
+          GroceryItem(
+              id: responseData['name'],
+              name: _enteredName,
+              quantity: _enteredQuantity,
+              category: _selectedCategory),
+        );
+      } catch (e) {
+        print('erro');
+        print(e.runtimeType);
+        setState(() {
+          isSending = false;
+        });
+        throw e.toString();
+      }
     }
   }
 
