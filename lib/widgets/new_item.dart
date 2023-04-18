@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_complete_guide_shopping_app/widgets/grocery_list.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -29,8 +28,6 @@ class _NewItemState extends State<NewItem> {
       setState(() {
         isSending = true;
       });
-      // final url = Uri.https('flutter-course-7c872-default-rtdb.firebaseio.com',
-      //     'shopping-list.json');
       final firebaseUri = dotenv.env['FIREBASE_URL'] as String;
       final firebaseJson = dotenv.env['FIREBASE_JSON'] as String;
       final url = Uri.https(firebaseUri, "$firebaseJson.json");
@@ -48,10 +45,6 @@ class _NewItemState extends State<NewItem> {
           ),
         );
 
-        // if (!widget.mounted) {
-        //   return;
-        // }
-
         final responseData = json.decode(response.body);
         // ignore: use_build_context_synchronously
         Navigator.of(context).pop(
@@ -62,8 +55,6 @@ class _NewItemState extends State<NewItem> {
               category: _selectedCategory),
         );
       } catch (e) {
-        print('erro');
-        print(e.runtimeType);
         setState(() {
           isSending = false;
         });
@@ -80,7 +71,7 @@ class _NewItemState extends State<NewItem> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Add a new item'),
+        title: const Text('Add a new item'),
       ),
       body: Padding(
         padding: EdgeInsets.all(12),
@@ -111,7 +102,7 @@ class _NewItemState extends State<NewItem> {
                 children: [
                   Expanded(
                     child: TextFormField(
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         label: Text('Quantity'),
                       ),
                       keyboardType: TextInputType.number,
@@ -130,7 +121,7 @@ class _NewItemState extends State<NewItem> {
                       },
                     ),
                   ),
-                  SizedBox(
+                  const SizedBox(
                     width: 8,
                   ),
                   Expanded(
@@ -146,7 +137,7 @@ class _NewItemState extends State<NewItem> {
                                 height: 16,
                                 color: category.value.color,
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 width: 6,
                               ),
                               Text(category.value.title),
@@ -162,7 +153,7 @@ class _NewItemState extends State<NewItem> {
                   )
                 ],
               ),
-              SizedBox(
+              const SizedBox(
                 height: 12,
               ),
               Row(
@@ -175,12 +166,12 @@ class _NewItemState extends State<NewItem> {
                   ElevatedButton(
                     onPressed: isSending ? null : _saveItem,
                     child: isSending
-                        ? SizedBox(
+                        ? const SizedBox(
                             height: 16,
                             width: 16,
                             child: CircularProgressIndicator(),
                           )
-                        : Text('Add item'),
+                        : const Text('Add item'),
                   )
                 ],
               ),
